@@ -20,6 +20,8 @@
 #include "hiview_config.h"
 #include "hiview_log.h"
 
+#include <ctype.h>
+
 #define CMD_MIN_LEN     2
 #define CMD_MAX_LEN     32
 #define CMD_HILOGCAT    "hilog"
@@ -294,8 +296,8 @@ static void SetOutputModule(const char *cmd)
 static boolean CheckCmdStr(const char *cmd)
 {
     while (*cmd != '\0') {
-        if (!((*cmd >= 'a' && *cmd <= 'z') || (*cmd >= 'A' && *cmd <= 'Z') || (*cmd >= '0' && *cmd <= '9') ||
-            (*cmd == '=') || (*cmd == '-') || (*cmd == ' ') || (*cmd == '\n'))) {
+        if (!(isalnum(*cmd) || (*cmd == ' ') || (*cmd == '\n') 
+            || (*cmd == '=') || (*cmd == '-'))) {
             return FALSE;
         }
         cmd++;
