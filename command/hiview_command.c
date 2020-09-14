@@ -64,24 +64,26 @@ void HilogCmdProc(const char *cmd)
         HIVIEW_UartPrint("Invalid command.\n");
         return;
     }
-    int i = 0;
-    if (cmd[i++] == OPTION_TAG) {
-        switch (cmd[i++]) {
-            case OPTION_HELP:
-                HilogHelpProc();
-                return;
-            case OPTION_LIST:
-                HilogListProc(&cmd[i]);
-                return;
-            case OPTION_SET:
-                HilogSetProc(&cmd[i]);
-                return;
-            default:
-                HIVIEW_UartPrint("Invalid command.\n");
-                return;
-        }
+
+    if (*cmd != OPTION_TAG) {
+        HIVIEW_UartPrint("Invalid command.\n");
+        return;
     }
-    HIVIEW_UartPrint("Invalid command.\n");
+
+    switch (*(++cmd)) {
+        case OPTION_HELP:
+            HilogHelpProc();
+            return;
+        case OPTION_LIST:
+            HilogListProc(++cmd);
+            return;
+        case OPTION_SET:
+            HilogSetProc(++cmd);
+            return;
+        default:
+            HIVIEW_UartPrint("Invalid command.\n");
+            return;
+    }
 }
 
 /* Command does not contain the "hievent". */
@@ -96,21 +98,23 @@ void HieventCmdProc(const char *cmd)
         HIVIEW_UartPrint("Invalid command.\n");
         return;
     }
-    int i = 0;
-    if (cmd[i++] == OPTION_TAG) {
-        switch (cmd[i++]) {
-            case OPTION_HELP:
-                HieventHelpProc();
-                return;
-            case OPTION_SET:
-                HieventSetProc(&cmd[i]);
-                return;
-            default:
-                HIVIEW_UartPrint("Invalid command.\n");
-                return;
-        }
+
+    if (*cmd != OPTION_TAG) {
+        HIVIEW_UartPrint("Invalid command.\n");
+        return;
     }
-    HIVIEW_UartPrint("Invalid command.\n");
+
+    switch (*(++cmd)) {
+        case OPTION_HELP:
+            HieventHelpProc();
+            return;
+        case OPTION_SET:
+            HieventSetProc(++cmd);
+            return;
+        default:
+            HIVIEW_UartPrint("Invalid command.\n");
+            return;
+    }
 }
 
 /* Command does not contain the "dump". */
@@ -125,24 +129,26 @@ void DumpCmdProc(const char *cmd)
         HIVIEW_UartPrint("Invalid command.\n");
         return;
     }
-    int i = 0;
-    if (cmd[i++] == OPTION_TAG) {
-        switch (cmd[i++]) {
-            case OPTION_HELP:
-                DumpHelpProc();
-                return;
-            case OPTION_SET:
-                DumpSetProc(&cmd[i]);
-                return;
-            case OPTION_SIMULATE:
-                DumpSimulateProc();
-                return;
-            default:
-                HIVIEW_UartPrint("Invalid command.\n");
-                return;
-        }
+
+    if (*cmd != OPTION_TAG) {
+        HIVIEW_UartPrint("Invalid command.\n");
+        return;
     }
-    HIVIEW_UartPrint("Invalid command.\n");
+
+    switch (*(++cmd)) {
+        case OPTION_HELP:
+            DumpHelpProc();
+            return;
+        case OPTION_SET:
+            DumpSetProc(++cmd);
+            return;
+        case OPTION_SIMULATE:
+            DumpSimulateProc();
+            return;
+        default:
+            HIVIEW_UartPrint("Invalid command.\n");
+            return;
+    }
 }
 
 static void HilogHelpProc(void)
@@ -190,16 +196,17 @@ static void HieventHelpProc(void)
 
 static void HieventSetProc(const char *cmd)
 {
-    if (*cmd == '\0') {
-        if (g_hiviewConfig.eventSwitch == HIVIEW_FEATURE_ON) {
-            SwitchEvent(HIVIEW_FEATURE_OFF);
-            HIVIEW_UartPrint("Close event function success.\n");
-        } else {
-            SwitchEvent(HIVIEW_FEATURE_ON);
-            HIVIEW_UartPrint("Open event function success.\n");
-        }
-    } else {
+    if (*cmd != '\0') {
         HIVIEW_UartPrint("Invalid command.\n");
+        return;
+    }
+
+    if (g_hiviewConfig.eventSwitch == HIVIEW_FEATURE_ON) {
+        SwitchEvent(HIVIEW_FEATURE_OFF);
+        HIVIEW_UartPrint("Close event function success.\n");
+    } else {
+        SwitchEvent(HIVIEW_FEATURE_ON);
+        HIVIEW_UartPrint("Open event function success.\n");
     }
 }
 
@@ -213,16 +220,17 @@ static void DumpHelpProc(void)
 
 static void DumpSetProc(const char *cmd)
 {
-    if (*cmd == '\0') {
-        if (g_hiviewConfig.dumpSwitch == HIVIEW_FEATURE_ON) {
-            SwitchDump(HIVIEW_FEATURE_OFF);
-            HIVIEW_UartPrint("Close dump function success.\n");
-        } else {
-            SwitchDump(HIVIEW_FEATURE_ON);
-            HIVIEW_UartPrint("Open dump function success.\n");
-        }
-    } else {
+    if (*cmd != '\0') {
         HIVIEW_UartPrint("Invalid command.\n");
+        return;
+    }
+
+    if (g_hiviewConfig.dumpSwitch == HIVIEW_FEATURE_ON) {
+        SwitchDump(HIVIEW_FEATURE_OFF);
+        HIVIEW_UartPrint("Close dump function success.\n");
+    } else {
+        SwitchDump(HIVIEW_FEATURE_ON);
+        HIVIEW_UartPrint("Open dump function success.\n");
     }
 }
 
@@ -246,10 +254,9 @@ static void ListLevelInfo(void)
 
 static void ListModuleInfo(void)
 {
-    int32 i, ret;
     char modInfo[STR_MAX_LEN] = { '\0' };
     HIVIEW_UartPrint("======Module Information======\n");
-    for (i = 0; i < HILOG_MODULE_MAX; i++) {
+    for (int32 i = 0, ret = 0; i < HILOG_MODULE_MAX; i++) {
         ret = snprintf_s(modInfo, sizeof(modInfo), sizeof(modInfo) - 1, " %d - %s\n", i, HiLogGetModuleName(i));
         if (ret > 0) {
             modInfo[ret] = '\0';
@@ -260,38 +267,42 @@ static void ListModuleInfo(void)
 
 static void SetOutputLevel(const char *cmd)
 {
-    if (*cmd++ == OP_ASSIGN) {
-        char *endPtr = NULL;
-        errno = 0;
-        int32 level = strtol(cmd, &endPtr, 0);
-        if ((endPtr == NULL) || (cmd == endPtr) || (*endPtr != 0) || (errno == ERANGE)) {
-            HIVIEW_UartPrint("Set the log output level call strtol failure!\n");
-            return;
-        }
-        if (SetLogLevel((uint8)level) == TRUE) {
-            HIVIEW_UartPrint("Set the log output level success.\n");
-            return;
-        }
+    if (*cmd != OP_ASSIGN) {
+        HIVIEW_UartPrint("Set the log output level failure.\n");
+        return;
     }
-    HIVIEW_UartPrint("Set the log output level failure.\n");
+
+    char *endPtr = NULL;
+    errno = 0;
+    int32 level = strtol(++cmd, &endPtr, 0);
+    if ((endPtr == NULL) || (cmd == endPtr) || (*endPtr != 0) || (errno == ERANGE)) {
+        HIVIEW_UartPrint("Set the log output level call strtol failure!\n");
+        return;
+    }
+    if (SetLogLevel((uint8)level) == TRUE) {
+        HIVIEW_UartPrint("Set the log output level success.\n");
+        return;
+    }
 }
 
 static void SetOutputModule(const char *cmd)
 {
-    if (*cmd++ == OP_ASSIGN) {
-        char *endPtr = NULL;
-        errno = 0;
-        int32 mod = strtol(cmd, &endPtr, 0);
-        if ((endPtr == NULL) || (cmd == endPtr) || (*endPtr != 0) || (errno == ERANGE)) {
-            HIVIEW_UartPrint("Set the log output module call strtol failure!\n");
-            return;
-        }
-        if (SetLogOutputModule((uint8)mod) == TRUE) {
-            HIVIEW_UartPrint("Set the log output module success.\n");
-            return;
-        }
+    if (*cmd != OP_ASSIGN) {
+        HIVIEW_UartPrint("Set the log output module failure.\n");
+        return;
     }
-    HIVIEW_UartPrint("Set the log output module failure.\n");
+
+    char *endPtr = NULL;
+    errno = 0;
+    int32 mod = strtol(++cmd, &endPtr, 0);
+    if ((endPtr == NULL) || (cmd == endPtr) || (*endPtr != 0) || (errno == ERANGE)) {
+        HIVIEW_UartPrint("Set the log output module call strtol failure!\n");
+        return;
+    }
+    if (SetLogOutputModule((uint8)mod) == TRUE) {
+        HIVIEW_UartPrint("Set the log output module success.\n");
+        return;
+    }
 }
 
 static boolean CheckCmdStr(const char *cmd)
