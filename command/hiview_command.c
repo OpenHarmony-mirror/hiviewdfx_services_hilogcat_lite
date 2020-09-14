@@ -226,6 +226,7 @@ static void DumpSetProc(const char *cmd)
     }
 }
 
+/* div 0 to trigger dump immediately. */
 static void DumpSimulateProc(void)
 {
     uint32 a = 0;
