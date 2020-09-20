@@ -43,10 +43,13 @@ static int FileSize(const char *filename)
     if (!fp) {
         return -1;
     }
-    fseek(fp, 0L, SEEK_END);
-    int size = ftell(fp);
-    fclose(fp);
 
+    int size = 0;
+    int ret = fseek(fp, 0L, SEEK_END);
+    if (ret == 0) {
+        size = ftell(fp);
+    }
+    fclose(fp);
     return size;
 }
 
